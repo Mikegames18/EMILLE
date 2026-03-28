@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Emille AI Completa PRO</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+h1 {
+  color: #38bdf8;
+}
+
+#chatbox {
+  width: 90%;
+  max-width: 500px;
+  height: 300px;
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 10px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.user {
+  text-align: right;
+  color: #38bdf8;
+  margin: 5px;
+}
+
+.bot {
+  text-align: left;
+  color: #22c55e;
+  margin: 5px;
+}
+
+#inputArea {
+  display: flex;
+  width: 90%;
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+}
+
+button {
+  padding: 10px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  background: #38bdf8;
+  color: black;
+  cursor: pointer;
+}
+
+canvas {
+  margin-top: 10px;
+  max-width: 90%;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🤖 Emille AI PRO (Chat + Matemáticas + Imágenes)</h1>
+
+<div id="chatbox"></div>
+
+<div id="inputArea">
+  <input type="text" id="userInput" placeholder="Escribe algo o una operación...">
+  <button onclick="sendMessage()">Enviar</button>
+</div>
+
+<!-- SUBIR IMAGEN -->
+<input type="file" id="upload">
+<canvas id="canvas"></canvas>
+
+<div>
+  <button onclick="invertir()">Invertir</button>
+  <button onclick="grises()">Blanco y negro</button>
+  <button onclick="brillo()">Brillo +</button>
+  <button onclick="contraste()">Contraste</button>
+  <button onclick="sepia()">Sepia</button>
+  <button onclick="blur()">Desenfoque</button>
+</div>
+
+<!-- GENERADOR IA -->
+<h3>🎨 Crear imagen IA (Realista / 3D)</h3>
+<div>
+  <input type="text" id="imagePrompt" placeholder="Describe la imagen...">
+  <button onclick="crearImagen()">Generar</button>
+</div>
+
+<img id="resultadoImg" style="margin-top:10px; max-width:90%; border-radius:10px;">
+
+<script>
+// ======================
+// CHAT
+// ======================
+function sendMessage() {
+  const input = document.getElementById("userInput");
+  const message = input.value.trim();
+  if (message === "") return;
+
+  addMessage("user", message);
+  input.value = "";
+
+  setTimeout(() => {
+    const response = generateResponse(message);
+    addMessage("bot", response);
+  }, 400);
+}
+
+function addMessage(sender, text) {
+  const chatbox = document.getElementById("chatbox");
+  const msg = document.createElement("div");
+  msg.className = sender;
+  msg.textContent = text;
+  chatbox.appendChild(msg);
+  chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+function esExpresionMatematica(texto) {
+  return /[0-9+\-*/().^]/.test(texto);
+}
+
+function generateResponse(input) {
+  input = input.toLowerCase();
+
+  try {
+    if (esExpresionMatematica(input)) {
+      let resultado = math.evaluate(input);
+      return "🧮 Resultado: " + resultado;
+    }
+  } catch {
+    return "⚠️ No pude resolver esa operación.";
+  }
+
+  if (input.includes("hola")) return "Hola, soy Emille 🤖";
+  if (input.includes("hora")) return "Hora: " + new Date().toLocaleTimeString();
+
+  return "No entendí 🤔";
+}
+
+document.getElementById("userInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") sendMessage();
+});
+
+// ======================
+// CANVAS / EDITOR
+// ======================
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+document.getElementById("upload").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  const img = new Image();
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+
+  img.onload = function() {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+  };
+});
+
+function invertir() {
+  let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let data = imgData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = 255 - data[i];
+    data[i+1] = 255 - data[i+1];
+    data[i+2] = 255 - data[i+2];
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function grises() {
+  let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let data = imgData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    let avg = (data[i] + data[i+1] + data[i+2]) / 3;
+    data[i] = data[i+1] = data[i+2] = avg;
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function brillo() {
+  let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let data = imgData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] += 40;
+    data[i+1] += 40;
+    data[i+2] += 40;
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function contraste() {
+  let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let data = imgData.data;
+  let factor = 1.2;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] *= factor;
+    data[i+1] *= factor;
+    data[i+2] *= factor;
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function sepia() {
+  let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let data = imgData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    let r = data[i];
+    let g = data[i+1];
+    let b = data[i+2];
+
+    data[i]     = (0.393*r + 0.769*g + 0.189*b);
+    data[i + 1] = (0.349*r + 0.686*g + 0.168*b);
+    data[i + 2] = (0.272*r + 0.534*g + 0.131*b);
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function blur() {
+  ctx.filter = "blur(5px)";
+  ctx.drawImage(canvas, 0, 0);
+  ctx.filter = "none";
+}
+
+// ======================
+// GENERADOR IA
+// ======================
+function crearImagen() {
+  const promptInput = document.getElementById("imagePrompt").value;
+  const img = document.getElementById("resultadoImg");
+
+  const estilo = "ultra realistic, 3D render, cinematic lighting, 4k, highly detailed";
+  const promptFinal = promptInput + ", " + estilo;
+
+  img.src = "https://image.pollinations.ai/prompt/" + encodeURIComponent(promptFinal);
+}
+</script>
+
+</body>
+</html>
