@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Emille AI MODO DIOS</title>
+<title>Emille AI ULTRA DIOS</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
 
@@ -44,14 +44,14 @@ canvas {
 
 <body>
 
-<h1>🤖 Emille AI MODO DIOS</h1>
+<h1>🤖 Emille AI ULTRA DIOS</h1>
 
 <div id="chatbox"></div>
 
 <input id="userInput" placeholder="Escribe o habla...">
 <button onclick="sendMessage()">Enviar</button>
-<button onclick="voz()">🎙️ Hablar</button>
-<button onclick="limpiar()">🧹 Limpiar</button>
+<button onclick="voz()">🎙️</button>
+<button onclick="limpiar()">🧹</button>
 
 <br><br>
 
@@ -62,107 +62,89 @@ canvas {
 
 <button onclick="invertir()">Invertir</button>
 <button onclick="grises()">Grises</button>
-<button onclick="descargar()">💾 Descargar</button>
+<button onclick="brillo()">Brillo</button>
+<button onclick="descargar()">💾</button>
 
-<h3>🎨 IA Imagen PRO</h3>
-<input id="imagePrompt" placeholder="Describe la imagen">
+<h3>🎨 IA Imagen</h3>
+<input id="imagePrompt">
 <button onclick="crearImagen()">Generar</button>
 <br>
 <img id="resultadoImg" style="max-width:90%">
 
 <script>
-// ===== API KEY (PON LA TUYA)
-const API_KEY = "PON_AQUI_TU_API_KEY";
-
 // CHAT
-function addMessage(type, text){
-  let div = document.createElement("div");
-  div.className = type;
-  div.textContent = text;
-  chatbox.appendChild(div);
-  chatbox.scrollTop = chatbox.scrollHeight;
+function addMessage(type,text){
+  let d=document.createElement("div");
+  d.className=type;
+  d.textContent=text;
+  chatbox.appendChild(d);
+  chatbox.scrollTop=chatbox.scrollHeight;
 }
 
 async function sendMessage(){
-  let input = userInput.value;
-  if(!input) return;
+  let msg=userInput.value;
+  if(!msg) return;
 
-  addMessage("user", input);
-  userInput.value = "";
+  addMessage("user",msg);
+  userInput.value="";
 
   // matemáticas
-  try {
-    if(/[0-9+\-*/().^]/.test(input)){
-      let r = math.evaluate(input);
+  try{
+    if(/[0-9+\-*/().^]/.test(msg)){
+      let r=math.evaluate(msg);
       return addMessage("bot","🧮 "+r);
     }
-  } catch {}
+  }catch{}
 
-  // IA REAL
-  if(API_KEY !== "PON_AQUI_TU_API_KEY"){
-    let res = await fetch("https://api.openai.com/v1/chat/completions",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+API_KEY
-      },
-      body:JSON.stringify({
-        model:"gpt-4o-mini",
-        messages:[{role:"user",content:input}]
-      })
-    });
+  // IA backend
+  let res=await fetch("/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:msg})
+  });
 
-    let data = await res.json();
-    let respuesta = data.choices[0].message.content;
-
-    addMessage("bot", respuesta);
-    hablar(respuesta);
-  } else {
-    addMessage("bot","Soy Emille 😎 (modo básico)");
-  }
+  let data=await res.json();
+  addMessage("bot",data.reply);
+  hablar(data.reply);
 }
 
 // VOZ
 function voz(){
-  let rec = new webkitSpeechRecognition();
-  rec.lang = "es-ES";
+  let rec=new webkitSpeechRecognition();
+  rec.lang="es-ES";
   rec.start();
-
-  rec.onresult = (e)=>{
-    userInput.value = e.results[0][0].transcript;
+  rec.onresult=e=>{
+    userInput.value=e.results[0][0].transcript;
     sendMessage();
   };
 }
 
-// HABLAR
-function hablar(texto){
-  let msg = new SpeechSynthesisUtterance(texto);
+function hablar(t){
+  let msg=new SpeechSynthesisUtterance(t);
   speechSynthesis.speak(msg);
 }
 
-// LIMPIAR
 function limpiar(){
-  chatbox.innerHTML = "";
+  chatbox.innerHTML="";
 }
 
 // CANVAS
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+let canvas=document.getElementById("canvas");
+let ctx=canvas.getContext("2d");
 
-upload.onchange = e=>{
-  let img = new Image();
-  img.src = URL.createObjectURL(e.target.files[0]);
-
-  img.onload = ()=>{
-    canvas.width = img.width;
-    canvas.height = img.height;
+upload.onchange=e=>{
+  let img=new Image();
+  img.src=URL.createObjectURL(e.target.files[0]);
+  img.onload=()=>{
+    canvas.width=img.width;
+    canvas.height=img.height;
     ctx.drawImage(img,0,0);
   };
 };
 
 function invertir(){
-  let img = ctx.getImageData(0,0,canvas.width,canvas.height);
-  let d = img.data;
+  let img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  let d=img.data;
   for(let i=0;i<d.length;i+=4){
     d[i]=255-d[i];
     d[i+1]=255-d[i+1];
@@ -172,8 +154,8 @@ function invertir(){
 }
 
 function grises(){
-  let img = ctx.getImageData(0,0,canvas.width,canvas.height);
-  let d = img.data;
+  let img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  let d=img.data;
   for(let i=0;i<d.length;i+=4){
     let avg=(d[i]+d[i+1]+d[i+2])/3;
     d[i]=d[i+1]=d[i+2]=avg;
@@ -181,19 +163,27 @@ function grises(){
   ctx.putImageData(img,0,0);
 }
 
-// DESCARGAR
-function descargar(){
-  let link = document.createElement("a");
-  link.download = "imagen.png";
-  link.href = canvas.toDataURL();
-  link.click();
+function brillo(){
+  let img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  let d=img.data;
+  for(let i=0;i<d.length;i+=4){
+    d[i]+=30; d[i+1]+=30; d[i+2]+=30;
+  }
+  ctx.putImageData(img,0,0);
 }
 
-// IA IMÁGENES
+function descargar(){
+  let a=document.createElement("a");
+  a.download="imagen.png";
+  a.href=canvas.toDataURL();
+  a.click();
+}
+
+// IA IMAGEN
 function crearImagen(){
-  let p = imagePrompt.value;
-  let estilo = "ultra realistic, 3D render, 4k, cinematic lighting";
-  resultadoImg.src = "https://image.pollinations.ai/prompt/" + encodeURIComponent(p + "," + estilo);
+  let p=imagePrompt.value;
+  let estilo="ultra realistic, 3D render, cinematic lighting, 4k";
+  resultadoImg.src="https://image.pollinations.ai/prompt/"+encodeURIComponent(p+","+estilo);
 }
 </script>
 
